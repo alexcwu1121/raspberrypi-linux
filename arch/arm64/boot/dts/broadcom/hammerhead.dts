@@ -3,3 +3,41 @@
 
 #include "bcm2712-rpi-cm5.dtsi"
 #include "bcm2712-rpi-cm5io.dtsi"
+
+// disable spi-dev for spi10 since it's claimed by the can controller
+&spidev10 {
+    status = "disabled";
+};
+
+// can controller interrupt pin
+&gpio {
+    can0_pins: can0_pins {
+        brcm,pins = <27>;
+        brcm,function = <0>;
+    };
+};
+
+// can controller clock source
+&{/} {
+    can0_osc: can0_osc {
+        compatible = "fixed-clock";
+        #clock-cells = <0>;
+        clock-frequency = <16000000>;
+    };
+};
+
+// can controller
+&spi10 {
+    #address-cells = <1>;
+    #size-cells = <0>;
+    can0: mcp2515@0 {
+        reg = <0>;
+        compatible = "microchip,mcp2515";
+        pinctrl-names = "default";
+        pinctrl-0 = <&can0_pins>;
+        spi-max-frequency = <10000000>;
+        interrupt-parent = <&gpio>;
+        interrupts = <27 8>;
+        clocks = <&can0_osc>;
+    };
+};
