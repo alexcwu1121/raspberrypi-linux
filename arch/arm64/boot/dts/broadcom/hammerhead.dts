@@ -4,11 +4,6 @@
 #include "bcm2712-rpi-cm5.dtsi"
 #include "bcm2712-rpi-cm5io.dtsi"
 
-// disable spi-dev for spi10 since it's claimed by the can controller
-&spidev10 {
-    status = "disabled";
-};
-
 // can controller interrupt pin
 &gpio {
     can0_pins: can0_pins {
@@ -27,7 +22,9 @@
 };
 
 // can controller
-&spi10 {
+&spi2 {
+	status = "okay";
+
     #address-cells = <1>;
     #size-cells = <0>;
     can0: mcp2515@0 {
