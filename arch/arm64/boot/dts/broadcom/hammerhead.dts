@@ -46,3 +46,8 @@
 &fan {
     status = "okay";
 };
+
+// disable bluetooth
+&bluetooth {
+    status = "disabled";
+};
