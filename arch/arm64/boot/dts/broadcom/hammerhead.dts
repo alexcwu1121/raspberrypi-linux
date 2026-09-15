@@ -41,3 +41,8 @@
         clocks = <&can0_osc>;
     };
 };
+
+// enable cooling fan
+&fan {
+    status = "okay";
+};
