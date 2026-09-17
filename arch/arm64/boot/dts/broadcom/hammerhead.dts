@@ -4,10 +4,152 @@
 #include "bcm2712-rpi-cm5.dtsi"
 #include "bcm2712-rpi-cm5io.dtsi"
 
+&cma {
+	size = <0x20000000>; /* 512MB */
+};
+
+&cam0_clk {
+	status = "okay";
+	clock-frequency = <24000000>;
+};
+
+&cam1_clk {
+	status = "okay";
+	clock-frequency = <24000000>;
+};
+
+// both cameras share the same cam gpio lines
+&cam1_reg {
+	startup-delay-us = <70000>;
+	off-on-delay-us = <30000>;
+	regulator-min-microvolt = <2700000>;
+	regulator-max-microvolt = <2700000>;
+};
+
+&i2c6 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+    pinctrl-names = "default";
+    pinctrl-0 = <&rp1_i2c6_38_39>;
+	clock-frequency = <100000>;
+
+	cam0_node: imx708@1a {
+		compatible = "sony,imx708";
+		reg = <0x1a>;
+		status = "okay";
+
+		clocks = <&cam0_clk>;
+		clock-names = "inclk";
+
+		vana1-supply = <&cam1_reg>;	/* 2.8v */
+		vana2-supply = <&cam_dummy_reg>;/* 1.8v */
+		vdig-supply = <&cam_dummy_reg>;	/* 1.1v */
+		vddl-supply = <&cam_dummy_reg>;	/* 1.8v */
+
+		rotation = <180>;
+		orientation = <2>;
+		lens-focus = <&vcm0_node>;
+
+		port {
+			cam0_endpoint: endpoint {
+				clock-lanes = <0>;
+				data-lanes = <1 2>;
+				clock-noncontinuous;
+				remote-endpoint = <&csi0_ep>;
+				link-frequencies =
+					/bits/ 64 <450000000>;
+			};
+		};
+	};
+
+	vcm0_node: dw9817@c {
+		compatible = "dongwoon,dw9817-vcm";
+		reg = <0x0c>;
+		status = "okay";
+		VDD-supply = <&cam1_reg>;
+	};
+};
+
+&i2c3 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+    pinctrl-names = "default";
+    pinctrl-0 = <&rp1_i2c3_22_23>;
+	clock-frequency = <100000>;
+
+	cam1_node: imx708@1a {
+		compatible = "sony,imx708";
+		reg = <0x1a>;
+		status = "okay";
+
+		clocks = <&cam1_clk>;
+		clock-names = "inclk";
+
+		vana1-supply = <&cam1_reg>;	/* 2.8v */
+		vana2-supply = <&cam_dummy_reg>;/* 1.8v */
+		vdig-supply = <&cam_dummy_reg>;	/* 1.1v */
+		vddl-supply = <&cam_dummy_reg>;	/* 1.8v */
+
+		rotation = <180>;
+		orientation = <2>;
+		lens-focus = <&vcm1_node>;
+
+		port {
+			cam1_endpoint: endpoint {
+				clock-lanes = <0>;
+				data-lanes = <1 2>;
+				clock-noncontinuous;
+				remote-endpoint = <&csi1_ep>;
+				link-frequencies =
+					/bits/ 64 <450000000>;
+			};
+		};
+	};
+
+	vcm1_node: dw9817@c {
+		compatible = "dongwoon,dw9817-vcm";
+		reg = <0x0c>;
+		status = "okay";
+		VDD-supply = <&cam1_reg>;
+	};
+};
+
+&csi0 {
+	status = "okay";
+	brcm,media-controller;
+
+	port {
+		csi0_ep: endpoint {
+			remote-endpoint = <&cam0_endpoint>;
+			clock-lanes = <0>;
+			data-lanes = <1 2>;
+			clock-noncontinuous;
+		};
+	};
+};
+
+&csi1 {
+	status = "okay";
+	brcm,media-controller;
+
+	port {
+		csi1_ep: endpoint {
+			remote-endpoint = <&cam1_endpoint>;
+			clock-lanes = <0>;
+			data-lanes = <1 2>;
+			clock-noncontinuous;
+		};
+	};
+};
+
 // can controller interrupt pin
 &gpio {
     can0_pins: can0_pins {
-        brcm,pins = <27>;
+        brcm,pins = <20>;
         brcm,function = <0>;
     };
 };
@@ -37,7 +179,7 @@
         pinctrl-0 = <&can0_pins>;
         spi-max-frequency = <10000000>;
         interrupt-parent = <&gpio>;
-        interrupts = <27 8>;
+        interrupts = <20 8>;
         clocks = <&can0_osc>;
     };
 };
@@ -50,4 +192,65 @@
 // disable bluetooth
 &bluetooth {
     status = "disabled";
+};
+
+// gpio line name table
+&rp1_gpio {
+	gpio-line-names =
+		"CAN_SPI_CS", // GPIO_000
+		"CAN_SPI_MISO", // GPIO_001
+		"CAN_SPI_MOSI", // GPIO_002
+		"CAN_SPI_SCK", // GPIO_003
+		"SIM_UART_TX", // GPIO_004
+		"SIM_UART_RX", // GPIO_005
+		"SIM_UART_CTS", // GPIO_006
+		"SIM_UART_RTS", // GPIO_007
+		"SIM_I2C_SDA", // GPIO_008
+		"SIM_I2C_SCL", // GPIO_009
+		"LASER1", // GPIO_010
+		"SIM_UART_DTR", // GPIO_011
+		"W_LED_DIM", // GPIO_012
+		"IR_LED_DIM", // GPIO_013
+		"DEBUG_UART_TX", // GPIO_014
+		"DEBUG_UART_RX", // GPIO_015
+		"SIM_PWR_OFF", // GPIO_016
+		"SIM_RESET", // GPIO_017
+		"PCM_CLK", // GPIO_018
+		"PCM_FS", // GPIO_019
+		"CAN_INT", // GPIO_020
+		"PCM_DOUT", // GPIO_021
+		"I2C_SDA_CAM2", // GPIO_022
+		"I2C_SCL_CAM2", // GPIO_023
+		"LASER2", // GPIO_024
+		"TEST_GPIO_1", // GPIO_025
+		"CAN_FAULT", // GPIO_026
+		"TEST_GPIO_2", // GPIO_027
+
+		"PCIE_PWR_EN", // GPIO28
+		"FAN_TACH", // GPIO29
+		"HOST_SDA", // GPIO30
+		"HOST_SCL", // GPIO31
+		"ETH_RST_N", // GPIO32
+		"PCIE_DET_WAKE", // GPIO33
+
+		"CD0_IO0_MICCLK", // GPIO34
+		"CD0_IO0_MICDAT0", // GPIO35
+		"RP1_PCIE_CLKREQ_N", // GPIO36
+		"ETH_IRQ_N", // GPIO37
+		"SDA0", // GPIO38
+		"SCL0", // GPIO39
+		"-", // GPIO40
+		"-", // GPIO41
+		"USB_VBUS_EN", // GPIO42
+		"-", // GPIO43
+		"RP1_STAT_LED", // GPIO44
+		"FAN_PWM", // GPIO45
+		"-", // GPIO46
+		"2712_WAKE", // GPIO47
+		"-", // GPIO48
+		"-", // GPIO49
+		"-", // GPIO50
+		"-", // GPIO51
+		"-", // GPIO52
+		"-"; // GPIO53
 };
