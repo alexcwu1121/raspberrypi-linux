@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0
 
-#include "cma-overlay.dts"
+// Don't couple cma config to vc4 graphics
+// #include "cma-overlay.dts"
 
-&frag0 {
-	size = <(64*1024*1024)>;
-};
+/dts-v1/;
+/plugin/;
+
+// &frag0 {
+//	size = <(64*1024*1024)>;
+// };
 
 / {
 	compatible = "brcm,bcm2712";
